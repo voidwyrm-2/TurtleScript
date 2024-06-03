@@ -1,0 +1,18 @@
+# simple script that draws a square
+new turtle t
+
+t forward 100
+
+t left 90
+
+t forward 100
+
+t left 90
+
+t forward 100
+
+t left 90
+
+t forward 100
+
+t left 90

@@ -1,0 +1,17 @@
+wait 1.5
+
+new turtle t1
+new turtle t2
+
+
+t1 forward 100
+t1 left 90
+t1 forward 100
+
+
+t2 left 180
+t2 forward 100
+t2 left 90
+t2 forward 100
+
+t1 clear

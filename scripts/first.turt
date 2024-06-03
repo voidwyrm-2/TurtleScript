@@ -1,0 +1,7 @@
+# make new turtle 'Turt'
+new turtle Turt
+
+# move 'Turt' forward by 20
+Turt forward 20
+
+print "turtle end"
