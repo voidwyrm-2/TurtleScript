@@ -1,13 +1,13 @@
 # wait 1 second so I can see the screen while the code is running
 wait 1
 
-# make a turtle called 'Jeff'
-new turtle Jeff
+# make a turtle called 'Thomas'
+new turtle Thomas
 
 # loop 4 times to make a square
 !loop 4
-    Jeff forward 100
-    Jeff left 90
+    Thomas forward 100
+    Thomas left 90
 !end
 
 print "IT WORKS!!!!!"
