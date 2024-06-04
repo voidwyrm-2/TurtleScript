@@ -8,7 +8,9 @@ def turtlescript_playground():
     print("run 'exit' to exit the playground")
     while True:
         inp = input('>>> ')
-        exited = run_code(inp, exitonclick=False)
+        exited, v, t = run_code(inp, exitonclick=False)
+        print(v)
+        print(t)
         if exited == True: return
 
 
@@ -17,7 +19,7 @@ def show_help():
     print("'exit/quit': exits the program")
     print("'help': shows these messages")
     print("'run [file path]': runs a TurtleScript file")
-    print("'playground/play': runs the TurtleScript Interactive Playground")
+    #print("'playground/play': runs the TurtleScript Interactive Playground")
     
 
 FPATH_PREFIX = 'scripts'
@@ -42,8 +44,8 @@ def main():
             with open(fpath, 'rt') as tsf:
                 fcontent = tsf.read()
             run_code(fcontent)
-        elif inp.casefold() in ('playground', 'play'):
-            turtlescript_playground()
+        #elif inp.casefold() in ('playground', 'play'):
+        #    turtlescript_playground()
 
 
 

@@ -3,6 +3,7 @@ import turtle
 from typing import Any
 from random import randint
 from time import sleep
+from tcode import run_tcode
 turtle.hideturtle()
 
 
@@ -32,6 +33,8 @@ class Error:
         self.__sect = sect
     
     def get_type(self): return self.__type
+
+    def get_ln(self): return self.__ln
     
     def error(self):
         out = self.__type
@@ -274,7 +277,7 @@ def print_value(turtles: dict[str, Turtle], vars: dict[str, Any], value: str, ln
 
 
 
-def process_turtle_command(turtles: dict[str, Turtle], turtlename: str, command: str, inputs: list[str], ln: int) -> Error | None:
+def process_turtle_command(turtles: dict[str, Turtle], vars: dict[str, Any], turtlename: str, command: str, inputs: list[str], ln: int) -> Error | None:
     if turtlename not in list(turtles):
         return Error('UnknownTurtleError', f"turtle '{turtlename}' does not exist", ln)
     res = getattr(turtles[turtlename], command, None)
@@ -293,8 +296,22 @@ def process_turtle_command(turtles: dict[str, Turtle], turtlename: str, command:
     return Error('UnknownCommandError', f"unknown command '{command}'", ln)
 
 
+def collect_until_end(lines: list[str], start_ln: int, starttoken: str, endtoken: str = '!end') -> tuple[list[str], int, Error | None]:
+    out = []
+    endnest = 0
+    for ln, l in enumerate(lines):
+        if l == '' or l.startswith('#'): continue
+        if l == endtoken and endnest == 0: break
+        if l.startswith(('!loop', '!runtcode')): endnest += 1
+        if l.startswith('!end'): endnest -= 1
+        out.append(l)
 
-def process_line(turtles: dict[str, Turtle], vars: dict[str, Any], line: str, ln: int) -> Error | None:
+    if ln == len(lines)-1 and lines[-1] != endtoken:
+        return [], 0, Error('IncompleteStatementError', f"expected '{endtoken}' to end '{starttoken}' but found end of file", start_ln-1)
+    
+    return out, ln + start_ln, None
+
+def process_line(turtles: dict[str, Turtle], vars: dict[str, Any], line: str, lines: list[str], ln: int) -> Error | None:
     valid = False
     repcode = '{' + f'{randint(0, 9)}{randint(0, 9)}{randint(0, 9)}{randint(0, 9)}{randint(0, 9)}' + '}'
     # get all starts and ends of all strings in the line
@@ -333,9 +350,9 @@ def process_line(turtles: dict[str, Turtle], vars: dict[str, Any], line: str, ln
 
     try:
         if l[0] == 'print':
-                err = print_value(turtles, vars, ' '.join(l[1:]), ln)
-                if err: return err
-                valid = True
+            err = print_value(turtles, vars, ' '.join(l[1:]), ln)
+            if err: return err
+            valid = True
 
         elif l[0] == 'var' and l[2] == '=':
             err = create_variable(turtles, vars, l[1], ' '.join(l[3:]), ln)
@@ -351,13 +368,52 @@ def process_line(turtles: dict[str, Turtle], vars: dict[str, Any], line: str, ln
             err = create_turtle(turtles, l[2], ln)
             if err: return err
             valid = True
+        
+        elif l[0] == 'delete':
+            if l[1] in list(turtles):
+                err = delete_turtle(turtles, l[1], ln)
+            elif l[1] in list(vars):
+                err = delete_variable(vars, l[1], ln)
+            else: return Error('UnknownVariableError/UnknownTurtleError', f"unknown variable/turtle '{l[1]}'")
+            if err: return err
+            valid = True
+            
         elif l[0] == 'exit':
             try:
-                l1_converted, err = l[1]
+                l1_converted, err = get_value(l[1])
                 if err: return err
                 return Error('ExitError', l1_converted, ln)
             except IndexError:
                 return None
+            
+        elif l[0] == '!loop':
+            if len(l) < 2: return Error('MissingArgumentError', "expected argument 'loops' for action '!loop'", ln)
+            converted_time, err = get_value(turtles, vars, l[1], ln)
+            if err: return err
+            if not isinstance(converted_time, int): return Error('InvalidArgumentError', "argument 'loops' must be a whole number", ln)
+            loop_lines, loop_end_index, loop_err = collect_until_end(lines[ln:], ln, '!loop')
+            if loop_err: return loop_err
+            for _ in range(converted_time):
+                loop_code_err, va, tur = run_code(loop_lines, exitonclick=False, injected_vars=vars, injected_turtles=turtles)
+                if loop_code_err: return Error('DoNotPrintError')
+                for v in va:
+                    if v in list(vars): vars[v] = va[v]
+                for tu in tur:
+                    if tu in list(turtles): turtles[tu] = tur[tu]
+            return Error('JumpToLineNumber', ln=loop_end_index+1)
+
+        elif l[0] == '!runtcode':
+            if len(l) < 2: return Error('MissingArgumentError', "expected arguments 'turtle' for action '!runtcode'", ln)
+            if l[1] not in list(turtles):
+                return Error('UnknownTurtleError', f"turtle '{l[1]}' does not exist", ln)
+            tcodeblock_lines, tcodeblock_end_index, tcodeblock_err = collect_until_end(lines[ln:], ln, '!runtcode')
+            if tcodeblock_err: return tcodeblock_err
+            try:
+                tcode_runtime_err = run_tcode('\n'.join(tcodeblock_lines), turtles[l[1]], False)
+                if tcode_runtime_err: return Error('DoNotPrintError')
+            except Exception as e:
+                return Error('TcodeRuntimeError', e, ln)
+            return Error('JumpToLineNumber', ln=tcodeblock_end_index+1)
         
         elif l[0] in ('wait', 'sleep'):
             if len(l) < 2: return Error('MissingArgumentError', "expected argument 'time' for action 'wait/sleep'", ln)
@@ -369,37 +425,44 @@ def process_line(turtles: dict[str, Turtle], vars: dict[str, Any], line: str, ln
 
         elif l[0] in list(turtles):
             args = l[2:] if len(l) > 2 else []
-            err = process_turtle_command(turtles, l[0], l[1], args, ln)
+            err = process_turtle_command(turtles, vars, l[0], l[1], args, ln)
             if err: return err
             valid = True
     except IndexError: pass
 
-    if not valid: return Error('UnkownMeaningError', f'meaning of "{" ".join(l)}" is unknown', ln)
+    if not valid: return Error('UnknownMeaningError', f'meaning of "{" ".join(l)}" is unknown', ln)
     return None
 
 
 
-def run_code(text: str, exitonclick: bool = True, import_stack: list[str] = [], is_imported: bool = False, injected_vars: dict[str, Any] = None, injected_turtles: dict[str, Turtle] = None) -> bool:
-    vars: dict[str, Any] = injected_vars if injected_vars else {}
+def run_code(text: str | list[str], exitonclick: bool = True, import_stack: list[str] = [], is_imported: bool = False, injected_vars: dict[str, Any] = None, injected_turtles: dict[str, Turtle] = None) -> tuple[int, dict[str, Any] | dict, dict[str, Turtle] | dict]:
+    vars: dict[str, Any] = injected_vars if injected_vars and isinstance(injected_vars, dict) else {}
 
-    turtles: dict[str, Turtle] = {}
+    turtles: dict[str, Turtle] = injected_turtles if injected_turtles and isinstance(injected_turtles, dict) else {}
 
-    lines = [l.split('#')[0].strip() for l in text.replace('; ', '\n').replace(';', '\n').split('\n')]
+    lines = [l.split('#')[0].strip() for l in text.replace('; ', '\n').replace(';', '\n').split('\n')] if isinstance(text, str) else list(text)
 
+    ln = 0
+    while ln < len(lines):
+        l = lines[ln]
+        #print(ln, l)
+        if l == '' or l.startswith('#'): ln += 1; continue
 
-    for ln, l in enumerate(lines):
-        if l == '' or l.startswith('#'): continue
-
-        err = process_line(turtles, vars, l, ln+1)
+        err = process_line(turtles, vars, l, lines, ln+1)
         
         if err:
-            print(err.error())
-            if err.get_type() == 'ExitError':
-                return True
-            return False
-    print("click the turtle window to exit...")
-    if exitonclick: turtle.exitonclick()
-    return False
+            if err.get_type() == 'JumpToLineNumber': ln = err.get_ln(); continue
+            elif err.get_type() == 'DoNotPrintError': return 1, {}, {}
+            else:
+                print(err.error())
+                if err.get_type() == 'ExitError':
+                    return 2, {}, {}
+                return 1, {}, {}
+        ln += 1
+    if exitonclick:
+        print("click the turtle window to exit...")
+        turtle.exitonclick()
+    return 0, vars, turtles
 
 
 
@@ -412,5 +475,5 @@ new turtle Turt
 print Turt
 Turt speed 1
 Turt forward 100
-sleep 1
+wait 1
 print "EIXHENXBD"''')

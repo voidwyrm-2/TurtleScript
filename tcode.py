@@ -31,8 +31,9 @@ def run_instructions(instructions: list[tuple[int, int | float, int | float | No
         else: turtle_instance.color(*color)
         match mode:
             case 1:
-                turtle_instance.goto(x + iprevious[0], y + iprevious[1])
-                iprevious = x, y, color
+                new_x, new_y = x + iprevious[0], y + iprevious[1]
+                turtle_instance.goto(new_x, new_y)
+                iprevious = new_x, new_y, color
             case 2:
                 turtle_instance.forward(x)
                 iprevious = x, y, color if y else x, 0, color
@@ -51,15 +52,7 @@ def run_instructions(instructions: list[tuple[int, int | float, int | float | No
 
 
 
-def convert_snippet(snippet: str, line_num: int, mode: int, previous: tuple[int, int, int, tuple[int, int, int]]):
-    
-
-
-def process_tcode_snippet(snippet: str, mode: str, line_num: int, previous: tuple[int, int, int, tuple[int, int, int]]) -> tuple[tuple[int, int, int, tuple[int, int, int]], str | None]:
-    match mode:
-        case 1: pass
-        case 2:
-            get_move_dir = lambda x: 3 if x.startswith('r') else 1 if x.startswith('b') else 2 if x.startswith('l') else 0
+def convert_snippet(snippet: str, mode: int, line_num: int, previous: tuple[int, int, int, tuple[int, int, int]]) -> tuple[tuple[int, int, int, tuple[int, int, int]], str | None]:
     xyc = snippet.split(',')
     if len(xyc) == 2:
         x, y = xyc
@@ -87,7 +80,6 @@ def process_tcode_snippet(snippet: str, mode: str, line_num: int, previous: tupl
         try: y = int(y)
         except ValueError:
             return None, f"(line {line_num}) expected number for Y, but got '{y}' instead"
-        
         try:
             r = int(r)
             if r > 255 or r < 0: raise ValueError()
@@ -105,8 +97,59 @@ def process_tcode_snippet(snippet: str, mode: str, line_num: int, previous: tupl
             return None, f"(line {line_num}) expected number in 0-255 for B, but got '{b}' instead"
         return (mode, x, y, (r, g, b)), None
     else: return None, f"(line {line_num}) invalid instruction '{snippet}'"
-        case y:
-            pass
+
+
+def process_tcode_snippet(snippet: str, mode: str, line_num: int, previous: tuple[int, int, int, tuple[int, int, int]]) -> tuple[tuple[int, int, int | None, tuple[int, int, int]], str | None]:
+    if mode == 2:
+        get_move_dir = lambda x: (3, x.removeprefix('r')) if x.startswith('r') else (1, x.removeprefix('b')) if x.startswith('b') else (2, x.removeprefix('l')) if x.startswith('l') else (0, x.removeprefix('f'))
+        xyc = snippet.split(',')
+        if len(xyc) == 1:
+            dist = xyc[0]
+            dir, dist = get_move_dir(dist)
+            mode += dir
+            try: dist = int(dist)
+            except ValueError:
+                return None, f"(line {line_num}) expected number for Distance, but got '{dist}' instead"
+            return (mode, dist, None, previous[3]), None
+        
+        elif len(xyc) == 2:
+            dist, color_str = xyc
+            dir, dist = get_move_dir(dist)
+            mode += dir
+            try: dist = int(dist)
+            except ValueError:
+                return None, f"(line {line_num}) expected number for Distance, but got '{dist}' instead"
+            return (mode, dist, None, color_str), None
+        
+        elif len(xyc) == 4:
+            dist, r, g, b = xyc
+            dir, dist = get_move_dir(dist)
+            mode += dir
+            try: dist = int(dist)
+            except ValueError:
+                return None, f"(line {line_num}) expected number for Distance, but got '{dist}' instead"
+            try:
+                r = int(r)
+                if r > 255 or r < 0: raise ValueError()
+            except ValueError:
+                return None, f"(line {line_num}) expected number in 0-255 for R, but got '{r}' instead"
+            try:
+                g = int(g)
+                if g > 255 or g < 0: raise ValueError()
+            except ValueError:
+                return None, f"(line {line_num}) expected number in 0-255 for G, but got '{g}' instead"
+            try:
+                b = int(b)
+                if b > 255 or b < 0: raise ValueError()
+            except ValueError:
+                return None, f"(line {line_num}) expected number in 0-255 for B, but got '{b}' instead"
+            return (mode, dist, None, (r, g, b)), None
+        else: return None, f"(line {line_num}) invalid instruction '{snippet}'"
+
+    else:
+        res, err = convert_snippet(snippet, mode, line_num, previous)
+        if err: return None, err
+        return res, None
 
 def run_tcode(text: str, turtle_instance: turtle.Turtle = turtle, exitonclick: bool = True) -> bool:
     'The bool returned is `True` if an error occured, else `False`'
@@ -122,7 +165,7 @@ def run_tcode(text: str, turtle_instance: turtle.Turtle = turtle, exitonclick: b
         else: mode = 0
         previous = mode, 0, 0, (0, 0, 0)
         for s in t.split('/'):
-            res, err = process_tcode_snippet(s.strip(), mode, previous)
+            res, err = process_tcode_snippet(s.strip(), mode, ln+1, previous)
             if err: print(err); return
             instructions.append(res)
             previous = res
@@ -143,4 +186,7 @@ if __name__ == '__main__':
 0,25/-36,25/-36,20/0,20/0,25/36,25/36,20/0,20
 0,-20/0,0"""
     boxes = """4,-4/-24,-4/-24,24/4,24/4,-4/64,54/64,94/104,94/104,54/64,54/34,-54/14,-54/-4,-74/-4,-94/14,-114/34,-114/54,-94/54,-74/34,-54/-114,-34/-184,-34/-184,-104/-114,-104/-114,-34"""
-    run_tcode(scuttleray, t)
+    square_normal = '0,100/100,100/100,0/0,0'
+    square_offset = '~o 0,100/100,0/0,-100/-100,0'
+    square_directional = '~d f100/r90/f100/r90/f100/r90/f100'
+    run_tcode(square_directional, t)

@@ -1,5 +1,5 @@
 # TurtleScript
-TurtleScript is a scripting language I made that let's you control the Python turtle module with a coding language specifically made for it
+TurtleScript is a scripting language I made to control Python's turtle module
 
 
 Here's an example
