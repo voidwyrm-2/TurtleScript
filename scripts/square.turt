@@ -1,18 +1,18 @@
 # simple script that draws a square
-new turtle t
+new turtle Theo
 
-t forward 100
+Theo forward 100
 
-t left 90
+Theo left 90
 
-t forward 100
+Theo forward 100
 
-t left 90
+Theo left 90
 
-t forward 100
+Theo forward 100
 
-t left 90
+Theo left 90
 
-t forward 100
+Theo forward 100
 
-t left 90
+Theo left 90
