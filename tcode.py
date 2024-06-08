@@ -170,7 +170,9 @@ def run_tcode(text: str, turtle_instance: turtle.Turtle = turtle, exitonclick: b
             instructions.append(res)
             previous = res
         run_instructions(instructions, turtle_instance)
-    if exitonclick: turtle.exitonclick()
+    if exitonclick:
+        print("click the turtle window to exit...")
+        turtle.exitonclick()
     return False
             
 

@@ -1,0 +1,19 @@
+# a test of TurtleScript functions
+
+
+# make a new function that draws a rectangle
+!func DrawRect((turtle)st, (var)squareWidth, (var)squareHeight)
+    !loop 2
+        st forward squareWidth
+        st left 90
+
+        st forward squareHeight
+        st left 90
+    !end
+!end
+
+
+new turtle Tessa # hehe Murder Drones go brrrrrr
+
+
+DrawRect(Tessa, 100, 100)

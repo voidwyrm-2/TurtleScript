@@ -1,0 +1,5 @@
+wait 1
+
+new turtle Theodore
+
+Theodore write "AHHHHH"

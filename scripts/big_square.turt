@@ -1,0 +1,20 @@
+# draws a big square
+wait 1
+
+# Tim is also a part of the Turtle Cinematic Universe(TCU) now
+new turtle Tim
+
+Tim speed 1
+
+var screenWidthHalf = Tim._SCREEN_WIDTH / 2
+var screenHeightHalf = Tim._SCREEN_HEIGHT / 2
+Tim penup
+Tim goto -screenWidthHalf - 10, screenHeightHalf - 10
+Tim pendown
+
+Tim pensize 10
+
+!loop 4
+    Tim forward Tim._SCREEN_WIDTH
+    Tim right 90
+!end

@@ -1,0 +1,27 @@
+var inc = 10
+var dec = inc
+
+print "begin inc"
+!loop inc as ii
+    print "ii:"
+    print ii
+
+    print "inc:"
+    print inc
+
+    inc++
+!end
+print "end inc"
+
+
+print "begin dec"
+!loop dec as ii
+    print "ii:"
+    print ii
+
+    print "dec:"
+    print dec
+
+    dec--
+!end
+print "end dec"

@@ -1,0 +1,11 @@
+
+var amount = 80
+var forwardMovement = 50
+
+new turtle AHH
+# fullname "AHH AHHHHHHHH II"
+
+!loop amount as i
+    AHH forward forwardMovement
+    AHH right i * 8
+!end

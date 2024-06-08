@@ -1,0 +1,4 @@
+new turtle Turt
+
+print Turt._SCREEN_WIDTH
+print Turt._SCREEN_HEIGHT

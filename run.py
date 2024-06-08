@@ -1,4 +1,5 @@
 from interpreter import run_code
+from tcode import run_tcode
 from os import path
 
 
@@ -16,25 +17,28 @@ def turtlescript_playground():
 
 
 def show_help():
+    print("        =commands=")
     print("'exit/quit': exits the program")
     print("'help': shows these messages")
     print("'run [file path]': runs a TurtleScript file")
+    print("'tcode [tcode]': runs the given tcode")
     #print("'playground/play': runs the TurtleScript Interactive Playground")
-    
-
-FPATH_PREFIX = 'scripts'
-FPATH_EXTENSION = '.turt'
 
 
-def main():
+
+def main(fpath_prefix: str = '', fpath_extension: str = '.turt', show_help_at_start: bool = True):
+    print("==TurtleScript Python Intepreter==")
+    if show_help_at_start: show_help()
     while True:
         inp = input('> ').strip()
         if inp.casefold() in ('exit', 'quit'):
             break
+        
         elif inp.casefold() == 'help':
             show_help()
+
         elif inp.startswith('run '):
-            fpath = FPATH_PREFIX + '/' + inp.removeprefix('run ').strip() + FPATH_EXTENSION
+            fpath = fpath_prefix + '/' + inp.removeprefix('run ').removesuffix('.turt').strip() + fpath_extension
             if not path.exists(fpath):
                 print(f"path '{fpath}' does not exist")
                 continue
@@ -44,10 +48,13 @@ def main():
             with open(fpath, 'rt') as tsf:
                 fcontent = tsf.read()
             run_code(fcontent)
+
+        elif inp.startswith('tcode '):
+            run_tcode(inp.removeprefix('tcode '))
         #elif inp.casefold() in ('playground', 'play'):
         #    turtlescript_playground()
 
 
 
 if __name__ == '__main__':
-    main()
+    main(fpath_prefix='scripts')

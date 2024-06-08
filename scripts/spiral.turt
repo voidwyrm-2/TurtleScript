@@ -1,0 +1,37 @@
+# this script creates a spiral
+
+
+# wait 1 second so I can see it working
+wait 1
+
+
+# turtle that will draw the spiral
+new turtle Tim
+
+# how many segments should the spiral have?
+var arms = 30
+
+# how far should we go each spiral segment?(this will be multiplied by iLengthMultiplier)
+var armLength = 5
+
+# how much we should turn after we draw each segment
+var turnDegrees = 90
+
+# how much we should turn before drawing the spiral
+var initialTurnDegrees = 0
+
+# how much is added to iLengthMultiplier each loop
+var lengthMultiplierAdditive = 1
+
+# this is the variable that's modified each loop
+var iLengthMultiplier = 1
+
+
+Tim left initialTurnDegrees
+# main loop
+!loop arms
+    Tim forward armLength * iLengthMultiplier
+    Tim left turnDegrees
+
+    iLengthMultiplier = iLengthMultiplier + lengthMultiplierAdditive
+!end

@@ -1,0 +1,24 @@
+# this script draws a circle(duh)
+
+
+wait 1
+
+# Tyler is a part of the Turtle Cinematic Universe(TCU) now
+
+new turtle Tyler
+
+
+Tyler penup
+
+Tyler goto -100, 100
+
+Tyler pendown
+
+
+var circleSegmentLength = 3
+
+
+!loop 360
+    Tyler forward circleSegmentLength
+    Tyler right 1
+!end

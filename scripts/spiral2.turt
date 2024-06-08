@@ -1,0 +1,32 @@
+# this script creates a spiral, but I wrote this after I added some extra functionality to TurtleScript
+
+
+# wait 1 second so I can see it working
+wait 1
+
+
+# turtle that will draw the spiral
+new turtle Timothy
+
+# how many segments should the spiral have?
+var arms = 30
+
+# how far should we go each spiral segment?(this will be multiplied by iLengthMultiplier)
+var armLength = 5
+
+# how much we should turn after we draw each segment
+var turnDegrees = 90
+
+# how much we should turn before drawing the spiral
+var initialTurnDegrees = 0
+
+
+Timothy left initialTurnDegrees
+# main loop
+# `i` is the loop index variable
+!loop arms as i
+    # print "loop index:"
+    # print i
+    Timothy forward armLength * i
+    Timothy left turnDegrees
+!end
